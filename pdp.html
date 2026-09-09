@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RUBA 퍼스트 루틴 — 제품상세 개선 데모</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#faf8f5; --paper:#fff; --line:#eae6e1; --ink:#1a1a1a; --sub:#625e5a; --muted:#9a948d;
+    --tint:#f1ece5; --ok:#2e7d33; --warn:#b3261e; --gold:#c9a227; --accent:#8a6a45; --blue:#1a4fa0;
+    --serif:"Noto Serif KR",Georgia,serif; --sans:"Noto Sans KR","Pretendard","Apple SD Gothic Neo",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6;padding-bottom:88px}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+  h1,h2,h3{font-family:var(--serif);font-weight:700;letter-spacing:-.01em;margin:0}
+  .demo-tag{position:fixed;left:12px;top:10px;font-size:11px;background:var(--ink);color:#fff;padding:4px 8px;border-radius:4px;opacity:.7;z-index:60}
+
+  header{position:sticky;top:0;z-index:40;background:rgba(250,248,245,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  header .wrap{display:flex;align-items:center;justify-content:space-between;height:64px;gap:20px}
+  .logo img{height:20px;display:block}
+  .gnb{display:flex;gap:26px;font-size:13.5px;font-weight:600;letter-spacing:.02em}
+  .gnb a{padding:20px 0}
+  .hdr-r{display:flex;align-items:center;gap:14px;font-size:12.5px;color:var(--sub)}
+  .icon{width:20px;height:20px;stroke:var(--ink);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;cursor:pointer}
+  @media(max-width:1000px){.gnb{display:none}}
+  @media(max-width:600px){.hdr-r span{display:none}}
+  .crumb{font-size:12.5px;color:var(--muted);padding:16px 0 0}
+  .crumb b{color:var(--sub);font-weight:400}
+
+  .pdp{display:grid;grid-template-columns:1fr 1fr;gap:48px;padding:20px 0 56px;align-items:start}
+  @media(max-width:900px){.pdp{grid-template-columns:1fr;gap:24px}}
+
+  .gal-main{aspect-ratio:1/1;border-radius:20px;overflow:hidden;background:var(--tint);position:relative}
+  .gal-main img{width:100%;height:100%;object-fit:cover;display:block}
+  .gal-badge{position:absolute;left:16px;top:16px;background:var(--ink);color:#fff;font-size:12px;padding:5px 12px;border-radius:999px}
+  .gal-thumbs{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}
+  .gal-thumbs button{aspect-ratio:1/1;border-radius:10px;overflow:hidden;border:2px solid transparent;padding:0;cursor:pointer;background:var(--tint)}
+  .gal-thumbs button.on{border-color:var(--ink)}
+  .gal-thumbs img{width:100%;height:100%;object-fit:cover;display:block}
+
+  .buy{position:sticky;top:84px}
+  .badges{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+  .badge{font-size:11px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--sub)}
+  .badge.promo{background:#fdecec;border-color:#f0c9c9;color:var(--warn)}
+  .badge.blue{background:#eaf1fb;border-color:#c7d8f0;color:var(--blue)}
+  h1.pname{font-size:24px;line-height:1.35}
+  .psub{color:var(--sub);font-size:14px;margin-top:6px}
+  .rating-row{display:flex;align-items:center;gap:8px;margin:12px 0;font-size:14px}
+  .stars{color:var(--gold);letter-spacing:2px;font-size:14px}
+  .rating-row a{color:var(--sub);text-decoration:underline;font-size:13px}
+
+  .price-box{padding:16px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:8px 0 16px}
+  .price-row{display:flex;align-items:baseline;gap:10px}
+  .consumer{color:var(--muted);text-decoration:line-through;font-size:15px}
+  .rate{color:var(--warn);font-weight:700;font-size:18px}
+  .sale{font-family:var(--serif);font-size:28px;font-weight:700}
+  .memberprice{color:var(--blue);font-weight:700;font-size:17px;margin-top:4px}
+  .memberprice small{font-weight:400;font-size:12.5px;color:var(--sub);margin-right:6px}
+
+  .benefits{font-size:12.5px;color:var(--sub);margin-bottom:16px}
+  .brow{display:flex;gap:12px;padding:5px 0}
+  .brow .bl{flex:0 0 62px;color:var(--muted)}
+  .brow .bv b{color:var(--ink)}
+
+  .addon{border:1px solid var(--line);border-radius:12px;background:var(--paper);padding:14px;margin-bottom:14px}
+  .addon .ah{font-size:12.5px;font-weight:600;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .addon .ah span{font-weight:400;color:var(--muted);font-size:11.5px}
+  .addon .aitem{display:flex;gap:10px;align-items:center;margin-bottom:10px}
+  .addon .aitem img{width:56px;height:56px;border-radius:8px;object-fit:cover;flex:none}
+  .addon .aitem b{font-size:12.5px;display:block;line-height:1.4}
+  .addon .aitem span{font-size:12px;color:var(--sub)}
+  .addon select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:12.5px;background:var(--paper);color:var(--ink)}
+
+  .qtyline{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px;background:var(--paper)}
+  .qtyline .nm{font-size:12.5px;color:var(--sub);line-height:1.45;margin-bottom:8px}
+  .qtyrow{display:flex;justify-content:space-between;align-items:center}
+  .stepper{display:flex;align-items:center;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .stepper button{width:30px;height:30px;border:0;background:var(--paper);cursor:pointer;font-size:16px;color:var(--sub)}
+  .stepper span{width:34px;text-align:center;font-size:13.5px}
+  .qtyrow .amt{font-weight:600}
+
+  .ship{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:14px;background:var(--paper);font-size:12.5px;color:var(--sub)}
+  .ship .ic{width:34px;height:34px;border-radius:50%;background:var(--tint);display:flex;align-items:center;justify-content:center;flex:none}
+  .ship b{display:block;color:var(--ink);font-size:13px}
+  .ship .cd{color:var(--warn);font-weight:700}
+
+  .totals{border-top:1px solid var(--line);padding-top:12px;margin-bottom:12px}
+  .trow{display:flex;justify-content:space-between;align-items:baseline;padding:3px 0;font-size:13.5px;color:var(--sub)}
+  .trow.big{font-size:15px;color:var(--ink)}
+  .trow.big b{font-family:var(--serif);font-size:22px}
+  .trow.member b{color:var(--blue);font-size:19px}
+
+  .couponpill{display:inline-flex;align-items:center;gap:6px;background:var(--ink);color:#fff;font-size:11.5px;padding:6px 12px;border-radius:999px;margin-bottom:10px;cursor:pointer}
+
+  .cta-row{display:flex;gap:8px;margin-bottom:12px}
+  .btn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--ink);color:#fff;border:1px solid var(--ink);border-radius:12px;padding:15px;font-size:14.5px;font-weight:700;cursor:pointer;font-family:inherit}
+  .btn.o{background:var(--paper);color:var(--ink)}
+  .btn:focus-visible{outline:3px solid #ffbf47;outline-offset:2px}
+  .npay{display:flex;gap:0;align-items:stretch;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--paper);margin-bottom:10px}
+  .npay .nlogo{flex:0 0 100px;font-size:10px;color:var(--sub);display:flex;flex-direction:column;justify-content:center;padding:8px 10px;line-height:1.35;border-right:1px solid var(--line)}
+  .npay .nlogo b{color:#03c75a;font-size:12px}
+  .npay .nbtn{flex:1;background:#03c75a;color:#fff;border:0;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer}
+  .npay .nzzim{flex:0 0 44px;background:var(--paper);border:0;border-left:1px solid var(--line);font-size:12px;color:var(--sub);cursor:pointer}
+  .evline{font-size:11.5px;color:var(--sub);display:flex;align-items:center;gap:6px;margin-bottom:12px}
+  .evline .tag{background:#eaf1fb;color:var(--blue);border-radius:4px;padding:2px 6px;font-size:10.5px;font-weight:600}
+
+  .prsec{padding:0 0 56px}
+  .prhead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px}
+  .prhead h2{font-size:18px}
+  .prhead a{font-size:13px;color:var(--sub);text-decoration:underline}
+  .prstrip{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+  @media(max-width:1000px){.prstrip{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:600px){.prstrip{grid-template-columns:repeat(2,1fr)}}
+  .prcard{background:var(--paper);border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer}
+  .prcard .ph{aspect-ratio:1/1;background:var(--tint);position:relative}
+  .prcard .ph img{width:100%;height:100%;object-fit:cover;display:block}
+  .prcard .ph .pi{position:absolute;right:8px;top:8px;background:rgba(0,0,0,.55);color:#fff;font-size:10px;padding:2px 6px;border-radius:4px}
+  .prcard .tx{padding:10px}
+  .prcard .st{color:var(--gold);font-size:11px;letter-spacing:1px}
+  .prcard p{margin:5px 0 6px;font-size:12px;line-height:1.5;color:var(--sub);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .prcard .who{font-size:10.5px;color:var(--muted)}
+
+  .tabs{display:flex;border-bottom:1px solid var(--line);position:sticky;top:64px;background:var(--bg);z-index:30}
+  .tabs button{flex:1;background:none;border:0;padding:18px 0;font-size:15px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;font-family:inherit}
+  .tabs button.on{color:var(--ink);border-color:var(--ink)}
+  .tabpane{display:none;padding:44px 0}
+  .tabpane.on{display:block}
+
+  .storyblock{text-align:center;margin-bottom:56px}
+  .storyblock h2{font-size:26px;line-height:1.45;margin-bottom:14px}
+  .storyblock p{color:var(--sub);font-size:15px;margin:0 auto;max-width:620px}
+  .storyimg{width:100%;max-width:560px;border-radius:16px;margin:24px auto;display:block}
+
+  .compare2{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:48px}
+  @media(max-width:700px){.compare2{grid-template-columns:1fr}}
+  .cbox{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:24px}
+  .cbox.on{border-color:var(--blue);background:#f8fafe}
+  .cbox{text-align:center}
+  .cbox .tag{display:inline-block;font-size:17px;font-weight:700;border-radius:999px;padding:8px 26px;background:var(--tint);color:var(--sub);margin-bottom:16px}
+  .cbox.on .tag{background:var(--blue);color:#fff}
+  .cbox img{width:70%;max-width:330px;height:auto;object-fit:contain;border-radius:10px;margin:0 auto 16px;display:block}
+  .cbox ul{margin:0;padding:0;list-style:none;font-size:13.5px;color:var(--sub)}
+  .cbox ul{text-align:left;display:inline-block}
+  .cbox li{padding:5px 0;display:flex;gap:8px}
+  .cbox li::before{content:"·";color:var(--muted)}
+  .cbox.on li::before{content:"✓";color:var(--blue);font-weight:700}
+
+  .cto{display:grid;grid-template-columns:260px 1fr;gap:28px;background:#101723;color:#fff;border-radius:18px;padding:32px;align-items:center;margin-bottom:56px}
+  @media(max-width:700px){.cto{grid-template-columns:1fr}}
+  .cto img{width:100%;border-radius:12px;display:block}
+  .cto .nm{background:var(--blue);display:inline-block;font-size:12px;padding:4px 10px;border-radius:6px;margin-bottom:12px}
+  .cto blockquote{margin:0 0 14px;font-family:var(--serif);font-size:19px;line-height:1.65}
+  .cto .role{font-size:13px;color:#a9b4c6}
+
+  .scenes{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:24px 0}
+  @media(max-width:700px){.scenes{grid-template-columns:repeat(2,1fr)}}
+  .scene{position:relative;border-radius:12px;overflow:hidden;aspect-ratio:3/4;background:var(--tint)}
+  .scene img{width:100%;height:100%;object-fit:cover;display:block}
+  .scene span{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);background:rgba(255,255,255,.94);font-size:12px;padding:5px 12px;border-radius:6px;white-space:nowrap}
+
+  .clinic{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:32px;margin-bottom:20px;text-align:center}
+  .clinic h3{font-size:20px;margin-bottom:20px}
+  .metrics{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:20px}
+  .metric{background:#eaf1fb;color:var(--blue);border-radius:999px;padding:9px 18px;font-size:14px;font-weight:600}
+  .metric.down{background:#eef7f0;color:var(--ok)}
+  .clinic .fn{font-size:11px;color:var(--muted);line-height:1.8}
+  .disclaimer{background:var(--tint);border-radius:12px;padding:16px 20px;font-size:12px;color:var(--sub);line-height:1.7;margin-bottom:44px}
+
+  .faqmini details{border-bottom:1px solid var(--line);padding:14px 0}
+  .faqmini summary{cursor:pointer;font-weight:500;font-size:14.5px}
+  .faqmini p{margin:8px 0 0;color:var(--sub);font-size:13.5px}
+  .spectable{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px}
+  .spectable td{padding:10px 0;border-bottom:1px solid var(--line)}
+  .spectable td:first-child{color:var(--sub);width:130px}
+
+  .rvsummary{display:flex;gap:40px;align-items:center;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:28px;margin-bottom:26px}
+  @media(max-width:700px){.rvsummary{flex-direction:column;gap:20px}}
+  .rvavg{text-align:center;flex:0 0 150px;border-right:1px solid var(--line);padding-right:32px}
+  @media(max-width:700px){.rvavg{border-right:0;border-bottom:1px solid var(--line);padding:0 0 20px;flex:none;width:100%}}
+  .rvavg .n{font-family:var(--serif);font-size:42px;font-weight:700;line-height:1.1}
+  .rvavg .stars{display:block;margin:6px 0}
+  .rvavg .c{font-size:12.5px;color:var(--muted)}
+  .rvbars{flex:1;width:100%}
+  .rvbars .row{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--sub);margin-bottom:6px}
+  .rvbars .row .l{width:34px}
+  .rvbars .track{flex:1;height:7px;background:var(--tint);border-radius:99px;overflow:hidden}
+  .rvbars .track i{display:block;height:100%;background:var(--gold);border-radius:99px}
+  .rvbars .row .n{width:34px;text-align:right;color:var(--muted)}
+  .rvnote{font-size:11.5px;color:var(--muted);margin-top:10px}
+
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+  .filters button{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;font-family:inherit;color:var(--sub)}
+  .filters button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+  .rv{padding:22px 0;border-bottom:1px solid var(--line)}
+  .rv .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:10px}
+  .rv .who{font-size:12.5px;color:var(--muted)}
+  .rv p{margin:0;font-size:14.5px;line-height:1.65}
+  .rv.warn{background:#fdf7f6;border-radius:12px;padding:22px;margin-bottom:6px}
+  .reply{margin-top:12px;background:var(--bg);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--sub)}
+  .reply b{display:block;color:var(--accent);font-size:12px;margin-bottom:3px}
+  .ctag{display:inline-block;margin-top:10px;font-size:11px;color:#8a4b3a;background:#fbeae9;border-radius:8px;padding:5px 10px}
+  .rvmore{text-align:center;margin-top:24px;display:flex;gap:14px;justify-content:center;align-items:center}
+  .rvmore button{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:10px 24px;font-size:13.5px;cursor:pointer;font-family:inherit}
+  .rvpolicy{font-size:12px;color:var(--muted);text-decoration:underline}
+
+  .qnahead{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+  .qtable{width:100%;border-collapse:collapse;font-size:13.5px}
+  .qtable th{text-align:left;color:var(--muted);font-weight:500;font-size:12px;padding:8px 6px;border-bottom:1px solid var(--line)}
+  .qtable td{padding:12px 6px;border-bottom:1px solid var(--line);color:var(--sub)}
+  .qtable td.tit{color:var(--ink)}
+  .lock{display:inline-flex;align-items:center;gap:4px;color:var(--muted)}
+  .qnote{font-size:12.5px;color:var(--muted);margin-top:14px}
+
+  .xsell{margin-top:56px;padding-bottom:20px}
+  .xsell h3{font-size:18px;margin-bottom:16px}
+  .xgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  @media(max-width:700px){.xgrid{grid-template-columns:1fr}}
+  .xcard{display:flex;gap:14px;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px;align-items:center}
+  .xcard img{width:76px;height:76px;border-radius:10px;object-fit:cover;flex:none}
+  .xcard b{display:block;font-size:14px}
+  .xcard span{font-size:13px;color:var(--sub)}
+
+  .sticky{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.96);border-top:1px solid var(--line);backdrop-filter:blur(8px);z-index:50}
+  .sticky .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;height:80px}
+  .sticky .l{font-size:14px}
+  .sticky .l b{display:block;font-size:16px}
+  .sticky .r{display:flex;gap:10px}
+  .sticky .btn{padding:13px 22px;font-size:14px;flex:none}
+  @media(max-width:600px){.sticky .l span{display:none}}
+
+  .toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:13px;padding:10px 18px;border-radius:999px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:70}
+  .toast.show{opacity:.95}
+</style>
+</head>
+<body>
+<div class="demo-tag">ADA 제안 데모 · PDP 개선안 v2 · 실사 기준(리뷰 184건 · 임상 6지표 · 회원혜택가)</div>
+
+<header>
+  <div class="wrap">
+    <a class="logo" href="index.html"><img src="img/logo.png" alt="RUBA"></a>
+    <nav class="gnb">
+      <a href="index.html#packages">SHOP</a>
+      <a href="index.html#why">WHY RUBA</a>
+      <a href="#" onclick="showTab('detail');return false;">HOW TO USE</a>
+      <a href="#" onclick="showTab('reviews');return false;">STORIES</a>
+      <a href="#" onclick="showTab('qna');return false;">SUPPORT</a>
+    </nav>
+    <div class="hdr-r">
+      <span>Login/Join</span>
+      <svg class="icon" viewBox="0 0 24 24" onclick="toast('검색 (데모)')"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+      <svg class="icon" viewBox="0 0 24 24" onclick="toast('My RUBA (데모)')"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+      <svg class="icon" viewBox="0 0 24 24" onclick="toast('장바구니 (데모)')"><path d="M6 7h12l1 13H5L6 7z"/><path d="M9 10V6a3 3 0 0 1 6 0v4"/></svg>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="crumb"><a href="index.html" style="text-decoration:underline">홈</a> &gt; <a href="index.html#packages" style="text-decoration:underline">SHOP</a> &gt; 핸즈프리 미세전류 뷰티 디바이스 &gt; <b>RUBA 퍼스트 루틴</b></div>
+
+  <div class="pdp">
+    <div>
+      <div class="gal-main"><span class="gal-badge">BEST</span><img id="galMain" src="img/first.jpg" alt="RUBA 퍼스트 루틴"></div>
+      <div class="gal-thumbs">
+        <button class="on" onclick="galSet(this,'img/first.jpg')"><img src="img/first.jpg" alt=""></button>
+        <button onclick="galSet(this,'img/hero_2.jpg')"><img src="img/hero_2.jpg" alt=""></button>
+        <button onclick="galSet(this,'img/lifestyle.jpg')"><img src="img/lifestyle.jpg" alt=""></button>
+        <button onclick="galSet(this,'img/device.jpg')"><img src="img/device.jpg" alt=""></button>
+        <button onclick="galSet(this,'img/hero_3.jpg')"><img src="img/hero_3.jpg" alt=""></button>
+      </div>
+    </div>
+
+    <div class="buy">
+      <div class="badges"><span class="badge promo">루틴 오프닝 프로모션</span><span class="badge blue">국내 최초 핸즈프리</span><span class="badge">해외배송 가능</span></div>
+      <h1 class="pname">RUBA 퍼스트 루틴</h1>
+      <div class="psub">자극 없이 지속되는 효과, 부착만 해도 시작되는 미세전류 케어</div>
+      <div class="rating-row"><span class="stars">★★★★★</span><b>4.8</b><a href="#" onclick="showTab('reviews');return false;">리뷰 184개 &gt;</a></div>
+
+      <div class="price-box">
+        <div class="price-row"><span class="consumer">1,199,000원</span></div>
+        <div class="price-row"><span class="rate">25%</span><span class="sale">899,000원</span></div>
+        <div class="memberprice"><small>회원 혜택가</small>839,000원</div>
+      </div>
+
+      <div class="benefits">
+        <div class="brow"><span class="bl">배송비</span><span class="bv"><b>무료</b></span></div>
+        <div class="brow"><span class="bl">회원 혜택</span><span class="bv">구매 시 결제 금액의 <b>2% 자동 적립</b><br>쓰면 쓸수록 돌려받는 <b>누적구매금액 혜택</b><br>리뷰 작성 시 <b>최대 3만5천원 적립</b></span></div>
+        <div class="brow"><span class="bl">무이자</span><span class="bv"><b>월 139,833원~</b> (최대 6개월 무이자 시)</span></div>
+        <div class="brow"><span class="bl">추가 혜택</span><span class="bv">많이 살수록 커지는 혜택<br>루틴 패치 추가 구매 시 <b>보너스 적립</b></span></div>
+      </div>
+
+      <div class="addon">
+        <div class="ah">추가구성상품 <span>추가로 구매를 원하시면 선택하세요</span></div>
+        <div class="aitem">
+          <img src="img/r40.jpg" alt="">
+          <div><b>RUBA 루틴 40 (40개입) | 루틴 오프닝 프로모션 특가</b><span>999,000원 · 퍼스트 루틴 전용 리필</span></div>
+        </div>
+        <select id="addonSel" onchange="calcTotal()">
+          <option value="0">- 상품 선택 -</option>
+          <option value="999000">루틴 40 (40개입) 추가 · +999,000원</option>
+          <option value="299000">루틴 10 (10개입) 추가 · +299,000원</option>
+        </select>
+      </div>
+
+      <div class="qtyline">
+        <div class="nm" id="lineName">RUBA 퍼스트 루틴 | 루틴 오프닝 프로모션 특가</div>
+        <div class="qtyrow">
+          <div class="stepper"><button onclick="qty(-1)">−</button><span id="qtyN">1</span><button onclick="qty(1)">+</button></div>
+          <span class="amt" id="lineAmt">899,000원</span>
+        </div>
+      </div>
+
+      <div class="ship">
+        <div class="ic">🚚</div>
+        <div><b>오늘 출발 상품</b><span class="cd" id="cd">02:10:16</span> 내에 결제 시 오늘 바로 발송됩니다.</div>
+      </div>
+
+      <div class="totals">
+        <div class="trow member"><span>회원 혜택가</span><b id="memberTotal">839,000원</b></div>
+        <div class="trow big"><span>총 상품금액</span><b id="grandTotal">899,000원</b> <span id="itemCount">(1개)</span></div>
+      </div>
+
+      <div class="couponpill" onclick="toast('20만원 쿠폰팩 받기 (데모)')">💬 20만원 쿠폰팩 받고 구매하기</div>
+
+      <div class="cta-row">
+        <button class="btn o" onclick="addCart()">장바구니</button>
+        <button class="btn" onclick="buy()">바로 구매</button>
+      </div>
+
+      <div class="npay">
+        <div class="nlogo"><b>NAVER</b>네이버아이디로 간편구매<br>네이버페이</div>
+        <button class="nbtn" onclick="toast('네이버페이 구매 (데모)')">N pay 구매</button>
+        <button class="nzzim" onclick="toast('찜 (데모)')">찜</button>
+      </div>
+      <div class="evline"><span class="tag">이벤트</span>100% 지급! 최대 1만원 혜택 확인하기</div>
+    </div>
+  </div>
+
+  <section class="prsec">
+    <div class="prhead">
+      <h2>포토 리뷰</h2>
+      <a href="#" onclick="showTab('reviews');return false;">리뷰 184개 전체보기 →</a>
+    </div>
+    <div class="prstrip">
+      <div class="prcard" onclick="showTab('reviews')"><div class="ph"><img src="img/device2.jpg" alt=""><span class="pi">📷</span></div><div class="tx"><span class="st">★★★★★</span><p>처음에는 솔직히 루바에 대해 의구심이 있었습니다. 기존에도 여러 미용기기를…</p><span class="who">김** · 26.07.16</span></div></div>
+      <div class="prcard" onclick="showTab('reviews')"><div class="ph"><img src="img/first.jpg" alt=""><span class="pi">📷</span></div><div class="tx"><span class="st">★★★★★</span><p>불독살 때문에 턱선이 없어 보여 스트레스였는데, 꾸준히 사용하니 턱…</p><span class="who">강** · 26.07.21</span></div></div>
+      <div class="prcard" onclick="showTab('reviews')"><div class="ph"><img src="img/device.jpg" alt=""><span class="pi">📷</span></div><div class="tx"><span class="st">★★★★★</span><p>이제 삼개월 넘게 루바를 사용하고 있습니다. 뷰티디바이스 사용을 귀…</p><span class="who">sol** · 26.07.30</span></div></div>
+      <div class="prcard" onclick="showTab('reviews')"><div class="ph"><img src="img/starter.jpg" alt=""><span class="pi">📷</span></div><div class="tx"><span class="st">★★★★★</span><p>뷰티 디바이스를 여러 개 사용해봤지만 이 정도로 편하게 쓸 수 있는 제…</p><span class="who">최** · 26.07.30</span></div></div>
+      <div class="prcard" onclick="showTab('reviews')"><div class="ph"><img src="img/lifestyle.jpg" alt=""><span class="pi">▶</span></div><div class="tx"><span class="st">★★★★★</span><p>퇴근하는 차에서 거의 매일 케어하고 있어요. 자주 쓸 수 있고, 퇴근…</p><span class="who">유** · 26.06.24</span></div></div>
+      <div class="prcard" onclick="showTab('reviews')"><div class="ph"><img src="img/hero_2.jpg" alt=""><span class="pi">📷</span></div><div class="tx"><span class="st">★★★★★</span><p>효과 좋고 편리합니다.</p><span class="who">sol** · 26.06.08</span></div></div>
+    </div>
+  </section>
+
+  <div class="tabs">
+    <button class="on" data-tab="detail" onclick="showTab('detail')">제품상세</button>
+    <button data-tab="reviews" onclick="showTab('reviews')">리뷰 (184)</button>
+    <button data-tab="qna" onclick="showTab('qna')">Q&amp;A (14)</button>
+  </div>
+
+  <section class="tabpane on" id="tab-detail">
+    <div class="storyblock">
+      <h2>돌리고 문지르는 사이,<br>자극에 지치던 피부</h2>
+      <h2 style="margin-top:40px;font-size:30px">이제, 문지르지 않아도<br>붙이는 순간 시작됩니다</h2>
+      <p>인체적용시험으로 확인된 미세전류 케어</p>
+      <img class="storyimg" src="img/device.jpg" alt="RUBA 5.8g 미세전류 모듈">
+      <div class="badges" style="justify-content:center"><span class="badge blue">미세전류 전달 기술 · 피부 밀착 신소재 패치</span><span class="badge blue">피부임상완료 · 피부탄력 18.9%↑</span></div>
+    </div>
+
+    <h2 style="font-size:22px;text-align:center;margin-bottom:24px">패치로 전달되는 미세전류,<br>루바만의 부착형 핸즈프리 방식</h2>
+    <div class="compare2">
+      <div class="cbox">
+        <span class="tag">기존 방식 (스틱형)</span>
+        <img src="img/compare_stick.jpg" alt="스틱형 디바이스가 피부 표면을 문지르는 단면 이미지">
+        <ul>
+          <li>열·진동으로 자극을 주는 방식</li>
+          <li>사용 중 열감·자극감이 느껴질 수 있음</li>
+          <li>직접 들고 문지르며 사용</li>
+        </ul>
+      </div>
+      <div class="cbox on">
+        <span class="tag">루바 부착형</span>
+        <img src="img/compare_ruba.jpg" alt="루바 패치가 밀착되어 미세전류가 균일하게 전달되는 단면 이미지">
+        <ul>
+          <li>생체전기와 유사한 미세전류를 균일하게 전달</li>
+          <li>피부 자극 거의 없는 사용감</li>
+          <li>핸즈 프리 · 360° 풀페이스</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="cto">
+      <img src="img/device2.jpg" alt="ASEN CTO 박진우">
+      <div>
+        <span class="nm">박진우</span>
+        <blockquote>"피부의 굴곡을 따라 밀착되어, 전류가 피부에 자연스럽게 전달되도록 하는 얇고 투명한 패치가 핵심 기술입니다."</blockquote>
+        <div class="role">ASEN CTO · MIT 박사 · 연세대 신소재공학부 교수</div>
+      </div>
+    </div>
+
+    <div class="storyblock">
+      <h2>일상을 멈추지 않아도,<br>케어 루틴은 이어집니다.</h2>
+      <div class="scenes">
+        <div class="scene"><img src="img/hero_2.jpg" alt=""><span>스트레칭 하면서도</span></div>
+        <div class="scene"><img src="img/lifestyle.jpg" alt=""><span>업무를 하면서도</span></div>
+        <div class="scene"><img src="img/hero_3.jpg" alt=""><span>커피 마시면서도</span></div>
+        <div class="scene"><img src="img/first.jpg" alt=""><span>운전중에도</span></div>
+      </div>
+    </div>
+
+    <div class="clinic">
+      <h3>피부 임상으로 확인된 뚜렷한 누적효과</h3>
+      <div class="metrics">
+        <span class="metric">피부결 개선 +18.8%</span>
+        <span class="metric">피부 겉 보습 개선 +42.3%</span>
+        <span class="metric down">눈가 케어 −26.6%</span>
+        <span class="metric down">팔자 부위 케어 −16.4%</span>
+        <span class="metric down">턱밑 케어 −21.9%</span>
+        <span class="metric">피부 탄력 개선 +12.1%</span>
+      </div>
+      <div class="fn">
+        Microcurrent Beauty Device, 기초 2종의 피부 탄력·피부 겉 보습·피부결·턱 밑 처짐·눈가 부위 피부 꺼짐·팔자 부위 피부 꺼짐에 대한 인체적용시험 결과보고서 발췌<br>
+        2025.10.27 ~ 2025.11.25 기간 내 만 20~59세 성인 남녀 23명 대상 / 주 2회, 총 8회 사용 / P&amp;K 피부임상연구센터<br>
+        아누아 어성초 77 수딩 토너, 아누아 어성초 70 데일리 로션과 함께 사용
+      </div>
+    </div>
+    <div class="disclaimer">
+      본 제품은 피부 미용기기로서 의료기기가 아니며, 의학적 효능·효과는 제공하지 않습니다.<br>
+      제품 사용 결과는 개인의 피부 상태나 함께 사용하는 화장품 등에 따라 차이가 있을 수 있습니다.
+    </div>
+
+    <h2 style="font-size:20px;margin:0 0 16px">가장 많이 묻는 질문</h2>
+    <div class="faqmini">
+      <details open><summary>자극이 거의 안 느껴지는데 정상 작동인가요?</summary><p>네, 정상입니다. LED가 켜져 있으면 미세전류가 전달되고 있는 상태이며, 생체전기와 유사한 수준의 미세전류를 균일하게 전달하는 저자극 설계입니다.</p></details>
+      <details><summary>같은 자리를 두 번 사용해도 되나요?</summary><p>가능하지만 자극이 다소 강해질 수 있어 민감성 피부는 짧게 시작해 서서히 늘려가시길 권장합니다.</p></details>
+      <details><summary>임상 시험은 어떤 조건으로 진행되었나요?</summary><p>만 20~59세 성인 남녀 23명을 대상으로 주 2회, 총 8회 사용 조건에서 P&amp;K 피부임상연구센터가 진행했습니다. 토너·로션을 함께 사용한 조건입니다.</p></details>
+      <details><summary>패치는 얼마나 자주 교체해야 하나요?</summary><p>1회 사용 후 교체하는 소모품입니다. 퍼스트 루틴은 루틴 40, 스타터 키트는 루틴 10이 전용 리필입니다.</p></details>
+    </div>
+
+    <h2 style="font-size:20px;margin:36px 0 12px">제품 사양</h2>
+    <table class="spectable">
+      <tr><td>무게</td><td>5.8g (모듈 기준)</td></tr>
+      <tr><td>방식</td><td>부착형 미세전류 · 핸즈프리 360° 풀페이스</td></tr>
+      <tr><td>권장 사용</td><td>1일 1~2회, 1회 20분 (임상 조건: 주 2회)</td></tr>
+      <tr><td>리필 패치</td><td>루틴 40 (40개입, 999,000원) · 1회 약 24,975원</td></tr>
+      <tr><td>기술 개발</td><td>ASEN CTO 박진우 (MIT 박사, 연세대 신소재공학부 교수)</td></tr>
+      <tr><td>임상</td><td>P&amp;K 피부임상연구센터 인체적용시험 완료 (n=23)</td></tr>
+    </table>
+  </section>
+
+  <section class="tabpane" id="tab-reviews">
+    <div class="rvsummary">
+      <div class="rvavg"><div class="n">4.8</div><span class="stars">★★★★★</span><div class="c">전체 184개</div></div>
+      <div class="rvbars">
+        <div class="row"><span class="l">5점</span><div class="track"><i style="width:82%"></i></div><span class="n">151</span></div>
+        <div class="row"><span class="l">4점</span><div class="track"><i style="width:13%"></i></div><span class="n">24</span></div>
+        <div class="row"><span class="l">3점</span><div class="track"><i style="width:3%"></i></div><span class="n">6</span></div>
+        <div class="row"><span class="l">2점</span><div class="track"><i style="width:1%"></i></div><span class="n">2</span></div>
+        <div class="row"><span class="l">1점</span><div class="track"><i style="width:1%"></i></div><span class="n">1</span></div>
+        <div class="rvnote">평균 4.8·총 184건은 자사몰 표기값이며, 점수별 분포는 예시입니다. 정확한 집계는 관리자 데이터 확인이 필요합니다.</div>
+      </div>
+    </div>
+
+    <div class="filters" id="rfilters">
+      <button class="on">전체 184</button><button>포토·영상 리뷰</button><button>사용 만족</button><button>AS 문의</button><button>가격 관련</button><button>민감성 피부</button>
+    </div>
+
+    <div class="rvlist">
+      <div class="rv">
+        <div class="top"><span class="stars">★★★★★</span><span class="who">26.07.16 · 김** · 포토</span></div>
+        <p>처음에는 루바에 대해 의구심이 있었다는 후기. 기존에 여러 미용기기를 써봤지만 문지르는 번거로움 때문에 오래 쓰지 못했는데, 붙여두는 방식이라 계속 쓰게 된다는 내용.</p>
+        <div class="reply"><b>RUBA 공식 답변</b>꾸준히 이어가고 계신다니 기쁩니다. 리필 알림도 함께 안내드릴게요.</div>
+      </div>
+      <div class="rv">
+        <div class="top"><span class="stars">★★★★★</span><span class="who">26.07.21 · 강** · 포토</span></div>
+        <p>턱선이 흐려져 스트레스였는데 꾸준히 사용하니 턱 라인이 정돈되어 보인다는 후기.</p>
+        <div class="reply"><b>RUBA 공식 답변</b>좋은 변화 함께해 기쁩니다. 앞으로의 루틴도 응원할게요.</div>
+      </div>
+      <div class="rv warn">
+        <div class="top"><span class="stars">★★★☆☆</span><span class="who">26.08.28 · 최****</span></div>
+        <p>포장·배송은 무난했으나, 모듈 한쪽 램프 색이 반대쪽과 달라(화이트/블루) 미세전류가 약하게 느껴진다며 A/S 여부를 문의.</p>
+        <div class="reply"><b>RUBA 공식 답변</b>불편을 드려 죄송합니다. 정확한 확인을 위해 1:1 상담으로 연락 부탁드립니다.</div>
+        <div class="ctag">AS 문의 → 리뷰가 아닌 1:1 상담으로 유도 필요 (개선 포인트)</div>
+      </div>
+      <div class="rv">
+        <div class="top"><span class="stars">★★★★★</span><span class="who">26.06.24 · 유** · 영상</span></div>
+        <p>퇴근길 차 안에서 거의 매일 케어한다는 후기. 이동 중에도 쓸 수 있어 사용 빈도가 높아졌다는 내용.</p>
+        <div class="reply"><b>RUBA 공식 답변</b>이동 중 사용 시에는 안전에 유의해 주세요. 꾸준한 루틴 감사합니다.</div>
+      </div>
+      <div class="rv">
+        <div class="top"><span class="stars">★★★★☆</span><span class="who">26.08.20 · 최****</span></div>
+        <p>타 제품 대비 완성도가 좋고 미세전류 감각도 만족스럽다는 후기. 같은 부위를 두 번 사용했더니 자극이 다소 강하게 느껴졌다며 민감 피부는 주의를 권함.</p>
+        <div class="reply"><b>RUBA 공식 답변</b>세심한 후기 감사합니다. 민감성 피부는 짧게 시작해 서서히 늘려가시길 권해드려요.</div>
+      </div>
+      <div class="rv">
+        <div class="top"><span class="stars">★★★★★</span><span class="who">26.07.10 · 네**** (네이버페이 구매평)</span></div>
+        <p>첫 사용 후기: 설명서를 볼 필요 없이 붙이고 떼면 끝이라 편하다는 반응. 리필 패치 비용은 부담되지만 꾸준히 써보겠다는 의견.</p>
+        <div class="reply"><b>RUBA 공식 답변</b>편하게 시작하셨다니 좋습니다! 정기배송으로 패치 부담을 줄이는 방법도 안내드릴게요.</div>
+      </div>
+    </div>
+    <div class="rvmore">
+      <button onclick="toast('리뷰 184개 더보기 (데모)')">더 보기</button>
+      <a class="rvpolicy" href="#" onclick="toast('운영정책 (데모)');return false;">운영정책</a>
+      <a class="rvpolicy" href="#" onclick="toast('리뷰 작성 (데모)');return false;">리뷰 작성</a>
+    </div>
+  </section>
+
+  <section class="tabpane" id="tab-qna">
+    <div class="qnahead">
+      <h2 style="font-size:20px">상품 Q&amp;A</h2>
+      <button class="btn o" style="flex:none;padding:11px 20px;font-size:13.5px" onclick="toast('상품 문의하기 (데모)')">문의하기</button>
+    </div>
+    <table class="qtable">
+      <tr><th>번호</th><th>제목</th><th>작성자</th><th>작성일</th></tr>
+      <tr><td>14</td><td class="tit"><span class="lock">🔒 사용부위</span></td><td>조****</td><td>2026-08-29</td></tr>
+      <tr><td>13</td><td class="tit"><span class="lock">↳ 🔒 사용부위 (답변완료)</span></td><td>RUBA</td><td>2026-08-31</td></tr>
+      <tr><td>12</td><td class="tit"><span class="lock">🔒 사용주의사항에 대해</span></td><td>전****</td><td>2026-05-17</td></tr>
+      <tr><td>11</td><td class="tit"><span class="lock">↳ 🔒 사용주의사항에 대해 (답변완료)</span></td><td>RUBA</td><td>2026-05-20</td></tr>
+      <tr><td>10</td><td class="tit">패치 <span class="badge" style="margin-left:4px">HIT · 조회 105</span></td><td>유****</td><td>2026-05-13</td></tr>
+    </table>
+    <div class="qnote">전체 14건 중 5건 표시. 비밀글 위주로 운영되어 다른 구매자가 참고하기 어렵습니다. 반복되는 질문(사용부위·주의사항)은 FAQ로 공개 전환하는 것을 권장합니다.</div>
+  </section>
+
+  <div class="xsell">
+    <h3>다른 고객님들이 함께 구매한 제품</h3>
+    <div class="xgrid">
+      <a class="xcard" href="pdp.html?cfg=r40"><img src="img/r40.jpg" alt=""><div><b>RUBA 루틴 40 (40개입) | 루틴 오프닝 프로모션 특가</b><span>999,000원 · 퍼스트 루틴 전용 리필</span></div></a>
+      <a class="xcard" href="pdp.html?cfg=starter"><img src="img/r10.jpg" alt=""><div><b>RUBA 루틴 10 (10개입)</b><span>299,000원 · 스타터 키트 전용 리필</span></div></a>
+    </div>
+  </div>
+</div>
+
+<div class="sticky">
+  <div class="wrap">
+    <div class="l"><span id="stickyName">퍼스트 루틴 · 회원 혜택가</span><b id="stickyPrice">839,000원 · 월 139,833원(6개월)</b></div>
+    <div class="r">
+      <button class="btn o" onclick="toast('카카오 상담 연결 (데모)')">문의</button>
+      <button class="btn" onclick="buy()">바로 구매</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+  const PRICES={first:899000,r40:999000,starter:1199000};
+  const MEMBER={first:839000,r40:939000,starter:1119000};
+  const NAMES={first:'RUBA 퍼스트 루틴',r40:'RUBA 루틴 40 (40개입)',starter:'RUBA 스타터 키트'};
+  let cfg='first', n=1;
+  const won=v=>v.toLocaleString('ko-KR')+'원';
+  const $=id=>document.getElementById(id);
+
+  function galSet(el,src){document.querySelectorAll('.gal-thumbs button').forEach(b=>b.classList.remove('on'));el.classList.add('on');$('galMain').src=src;}
+  function showTab(name){
+    document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===name));
+    document.querySelectorAll('.tabpane').forEach(p=>p.classList.toggle('on',p.id==='tab-'+name));
+    window.scrollTo({top:document.querySelector('.tabs').offsetTop-70,behavior:'smooth'});
+  }
+  function qty(d){n=Math.max(1,n+d);$('qtyN').textContent=n;calcTotal();}
+  function calcTotal(){
+    const base=PRICES[cfg]*n, add=+$('addonSel').value;
+    const total=base+add, memberTotal=MEMBER[cfg]*n+add;
+    $('lineAmt').textContent=won(base);
+    $('grandTotal').textContent=won(total);
+    $('memberTotal').textContent=won(memberTotal);
+    $('itemCount').textContent='('+(n+(add?1:0))+'개)';
+    $('stickyPrice').textContent=won(memberTotal)+' · 월 '+won(Math.round(memberTotal/6))+'(6개월)';
+  }
+  (function(){
+    const p=new URLSearchParams(location.search).get('cfg');
+    if(p && PRICES[p]){
+      cfg=p;
+      document.querySelector('h1.pname').textContent=NAMES[p];
+      $('lineName').textContent=NAMES[p]+(p==='first'?' | 루틴 오프닝 프로모션 특가':'');
+      document.querySelector('.sale').textContent=won(PRICES[p]);
+      document.querySelector('.memberprice').innerHTML='<small>회원 혜택가</small>'+won(MEMBER[p]);
+      $('stickyName').textContent=NAMES[p].replace('RUBA ','')+' · 회원 혜택가';
+      if(p==='starter'){document.querySelector('.consumer').style.display='none';document.querySelector('.rate').style.display='none';}
+      if(p==='r40'){document.querySelector('.consumer').textContent='1,196,000원';document.querySelector('.rate').textContent='16%';}
+    }
+    calcTotal();
+  })();
+  (function(){
+    let s=2*3600+10*60+16; const el=$('cd');
+    setInterval(()=>{ if(s<=0)return; s--;
+      const h=String(Math.floor(s/3600)).padStart(2,'0'),m=String(Math.floor(s%3600/60)).padStart(2,'0'),x=String(s%60).padStart(2,'0');
+      el.textContent=h+':'+m+':'+x; },1000);
+  })();
+  document.querySelectorAll('#rfilters button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#rfilters button').forEach(x=>x.classList.remove('on'));b.classList.add('on');toast('필터: '+b.textContent+' (데모)');}));
+  function buy(){toast('장바구니/결제로 이동 (데모)');setTimeout(()=>{location.href='index.html#packages';},900);}
+  function addCart(){toast('장바구니에 담았습니다 (데모)');}
+  let tt;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),1700);}
+</script>
+</body>
+</html>
